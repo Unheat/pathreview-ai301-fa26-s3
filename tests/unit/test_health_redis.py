@@ -28,8 +28,10 @@ def test_redis_probe_reports_unhealthy_on_connection_error():
     client = MagicMock()
     client.ping.side_effect = redis.ConnectionError("connection refused")
     db = AsyncMock()
-    with patch("redis.Redis.from_url", return_value=client):
-        with pytest.raises(HTTPException) as excinfo:
-            asyncio.run(health_check(db=db))
+    with (
+        patch("redis.Redis.from_url", return_value=client),
+        pytest.raises(HTTPException) as excinfo,
+    ):
+        asyncio.run(health_check(db=db))
     assert excinfo.value.status_code == 503
     assert excinfo.value.detail["dependencies"]["redis"] == "unhealthy"
